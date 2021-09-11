@@ -14,9 +14,10 @@ import numpy as np
 MONTHS_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
           'July', 'August', 'September', 'October', 'November', 'December']
 MONTHS = dict(zip(MONTHS_NAMES, range(1,13)))
-YEAR_NAMES = ['Preschool', 'Kindergarten', 'Year 1', 'Year 2', 'Year 3', 'Year 4',
+YEAR_NAMES = ['Kindergarten', 'Year 1', 'Year 2', 'Year 3', 'Year 4',
             'Year 5', 'Year 6', 'Year 7', 'Year 8', 'Year 9', 'Year 10', 'Year 11', 'Year 12', 'Older']
-SCHOOL_YEARS = dict(zip(YEAR_NAMES, range(-1,14)))
+SCHOOL_YEARS = dict(zip(YEAR_NAMES, range(0,14)))
+SCHOOL_YEARS['Preschool'] = 0
 PRESCHOOL_AGES = [4]
 KINDERGARTEN_AGES = [5]
 PRIMARY_SCHOOL_AGES = list(range(6,12))
@@ -81,7 +82,11 @@ def format_date(s, short_format=True):
     """
     s = s.split() # Splits the date into 3
     if short_format == False: # If a long format is called.
-        return s[0] + '-' + s[1] + '-' + s[2] # Adds dashes
+        if len(str(MONTHS[s[1]])) < 1:
+            s[1] = str(MONTHS[s[1]])
+        else:
+            s[1] = str(0) + str(MONTHS[s[1]])
+        return s[2] + '-' + s[1] + '-' + s[0] # Adds dashes
     else:
         return s[2]
 
@@ -100,8 +105,8 @@ def clean_school_name(sname):
     clean_school_name('The Woden School') should return 'Woden School'
     clean_school_name('Canberra College, The') should return 'Canberra College'
     """
-    sname.replace('The ', '') # Removes 'The ' in the school name.
-    sname.replace(', The', '') # Removes ', The' in the school name. 
+    sname = sname.replace('The ', '') # Removes 'The ' in the school name.
+    sname = sname.replace(', The', '') # Removes ', The' in the school name. 
     return sname
 
 ###   ###   ----------------------------------------------------------------
@@ -152,7 +157,8 @@ def parse_year(dt):
     parse_year('06/30/2015 12:00:00 AM') should be 2015
     parse_year('06/30/2020 11:59:59 PM') should be 2020
     """
-    return dt.split('/')[2].split()[0] # Splits by / into 3 sections, then splits the 3rd section, and prints the first value of the 3rd section.
+    return dt.split('/')[2].split()[0] # Splits by / into 3 sections, then splits the 3rd section, and returns the first value of the 3rd section.
+print(parse_year('06/30/2020 12:00:00 AM'))
 
 ###   ###   ----------------------------------------------------------------
 ###  TASK 2
@@ -170,18 +176,19 @@ def read_enrolment_data(fname, dt=dt_census):
     different from the format in the data file!), str, int, int -- and
     returns a list of those.
     """
-    data = csv.reader(fname, delimiter=',')
-    for heading in data[0]:
-        if heading == "date":
-    data = pd
+    i = 0
     enrolment = []
-    for date in dt["date"]:
-        for name in dt["name"]:
-            for year_level in dt["year_level"]:
-                for enrolment_num in dt["enrolment"]:
-                    enrolment.append(convert_census_record((date, name, year_level, enrolment_num)))
-
+    data = csv.reader(open(fname, newline=''), delimiter=',')
+    for row in data:
+        i += 1
+        if i != 1: # Skips the column headers.
+            if row[3] == "Older & Mature" or row[3] == "Mature": # Includes older & mature, and mature ages as older.
+                row[3] = "Older"
+            enrolment.append((format_date(row[0], False), clean_school_name(row[1]), convert_level(row[3]), row[4]))# Appends required tuple to a list 
+                                                                                                                    # Cannot use convert_census_record as it always uses short date format
+                                                                                                                    
     return enrolment 
+
 
 ###   ###   ----------------------------------------------------------------
 ###  TASK 3
@@ -290,5 +297,3 @@ def enrolment_vs_population(enrolment,
               census date for enrolment in a given year
     """
     return output
-
-print(convert_census_record(["20 February 2019","Amaroo School","Year 10","196"]))
