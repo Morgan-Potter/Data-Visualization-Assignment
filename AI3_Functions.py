@@ -2,6 +2,10 @@
 The following is a customised version of ANUs Intro to Data Science course.
 """
 
+# Questions:
+# In task 2, are the tuples meant to include: the full date, including the month, or just the year. 
+# In task 6, what exactly is meant to be the output? From the descriptions I have gathered it is meant to output a dictionay, the keys being the school name and the values being the average enrolment of all months in one year, totalled across the school levels chosen. 
+
 ###   ###   ----------------------------------------------------------------
 # Import statements
 import sys
@@ -157,7 +161,7 @@ def parse_year(dt):
     parse_year('06/30/2015 12:00:00 AM') should be 2015
     parse_year('06/30/2020 11:59:59 PM') should be 2020
     """
-    return dt.split('/')[2].split()[0] # Splits by / into 3 sections, then splits the 3rd section, and returns the first value of the 3rd section.
+    return int(dt.split('/')[2].split()[0]) # Splits by / into 3 sections, then splits the 3rd section, and returns the first value of the 3rd section.
 print(parse_year('06/30/2020 12:00:00 AM'))
 
 ###   ###   ----------------------------------------------------------------
@@ -178,15 +182,14 @@ def read_enrolment_data(fname, dt=dt_census):
     """
     i = 0
     enrolment = []
-    data = csv.reader(open(fname, newline=''), delimiter=',')
+    data = csv.reader(open(fname), delimiter=',')
+    next(data)
     for row in data:
-        i += 1
-        if i != 1: # Skips the column headers.
-            if row[3] == "Older & Mature" or row[3] == "Mature": # Includes older & mature, and mature ages as older.
-                row[3] = "Older"
-            enrolment.append((format_date(row[0], False), clean_school_name(row[1]), convert_level(row[3]), row[4]))# Appends required tuple to a list 
-                                                                                                                    # Cannot use convert_census_record as it always uses short date format
-                                                                                                                    
+         # Skips the column headers.
+        if row[3] == "Older & Mature" or row[3] == "Mature": # Includes older & mature, and mature ages as older.
+            row[3] = "Older"
+        enrolment.append((format_date(row[0], False), clean_school_name(row[1]), convert_level(row[3]), row[4]))# Appends required tuple to a list 
+                                                                                                                    # Cannot use convert_census_record as it always uses short date format                                                                                                                  
     return enrolment 
 
 
@@ -204,6 +207,10 @@ def get_suburb_schools(school_data, suburb):
     several test cases that will be checked. For future questions, inspect
     those test cases. Ask your teacher if you're unsure what this means.
     """
+    schools = []
+    for tuples in school_data:
+        if tuples[2] == suburb:
+            schools.append(tuples)
     return schools
 
 ###   ###   ----------------------------------------------------------------
@@ -219,6 +226,16 @@ def read_population_data(fname, ages_range=86):
          key: 2-tuple (suburb, year)
          value: list of 2-tuples (female, male) for age ranges 0..86
     """
+    pop_data = {}
+    i = 0
+    data = csv.reader(open(fname), delimiter=',')
+    for row in data:
+        i += 1
+        if i > 1:
+            pop_data[(row[1].strip(), parse_year(row[0]))] = []
+            for age in range(ages_range):
+                age += 2
+                pop_data[(row[1].strip(), parse_year(row[0]))].append((row[age], row[age + ages_range]))
     return pop_data
 
 ###   ###   ----------------------------------------------------------------
@@ -231,8 +248,10 @@ def all_suburbs(pop_data):
     """
     Extracts suburbs from pop_data and returns them as a set
     """
+    suburbs = set()
+    for key in pop_data:
+        suburbs.add(key[0])
     return suburbs
-
 ###   ###   ----------------------------------------------------------------
 ###  TASK 6    (2 Marks)
 ###  TOTAL SCHOOL ENROLMENT
@@ -248,6 +267,26 @@ def get_yearly_enrolment(enrolment, year, levels=[]):
     February and August), a mean value of enrolment numbers for that year is
     used.
     """
+    months = 0
+    year_total = 0    
+    output = {}
+    # Adds all schools to the output dictionary
+    for tuples in enrolment:
+        output[tuples[1]] = 0
+    for school in output:
+        for year_level in levels:
+            for tuples in enrolment:
+                if int(tuples[0].split('-')[0]) == year and tuples[2] == year_level and tuples[1] == school:
+                    months += 1
+                    year_total += tuples[3]
+            if months != 0:
+                output[school] += (year_total / months)
+            months = 0
+            year_total = 0
+                
+        
+
+
     return output
 
 ########################################################################################################################
