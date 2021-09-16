@@ -29,7 +29,6 @@ if __name__ == '__main__':
                            year_level=JUNIOR_SCHOOL_AGES,
                            year=the_year
                            )
-    print(school_age_data)
     # retain only those suburbs where someone lives and goes to school
     school_age_data  = [e for e in school_age_data if e[1:] != (0,0)]
     pop_numbers  = [e[1] for e in school_age_data]
@@ -38,7 +37,7 @@ if __name__ == '__main__':
     mind, maxd = (min(diffs), max(diffs)) if diffs else (1,0)
     colours = [d//10 for d in diffs] # break into subgroups of one colour
     sizes = [abs(d)*500/(maxd - mind) for d in diffs] # set point sizes
-    
+
     # plotting
     fig = plt.figure(figsize=(6,6))
     ax1 = fig.add_subplot(211)
