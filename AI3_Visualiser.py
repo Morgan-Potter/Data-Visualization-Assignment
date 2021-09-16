@@ -29,6 +29,7 @@ if __name__ == '__main__':
                            year_level=JUNIOR_SCHOOL_AGES,
                            year=the_year
                            )
+    print(school_age_data)
     # retain only those suburbs where someone lives and goes to school
     school_age_data  = [e for e in school_age_data if e[1:] != (0,0)]
     pop_numbers  = [e[1] for e in school_age_data]
